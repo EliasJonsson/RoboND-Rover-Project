@@ -147,6 +147,7 @@ def perception_step(Rover):
     # 7) Update Rover worldmap (to be displayed on right side of screen)
     
     if Rover.vel > 0.2 and Rover.brake == 0.0:
+        # Giver higher weight to pixel classified as navigable terrain.
         Rover.worldmap[world_pix_obsticles_y, world_pix_obsticles_x, 0] += 1
         Rover.worldmap[world_pix_navigable_y, world_pix_navigable_x, 2] += 10
         # Example: Rover.worldmap[obstacle_y_world, obstacle_x_world, 0] += 1

@@ -13,7 +13,6 @@ def decision_step(Rover):
     # Check if we have vision data to make decisions with
     if Rover.nav_angles is not None:    
         # Check for Rover.mode status
-        print(Rover.vel)
     
         if Rover.mode == 'forward': 
             # Check the extent of navigable terrain
@@ -76,6 +75,8 @@ def decision_step(Rover):
             rock_ang = np.clip(np.mean(Rover.rock_ang * 180/np.pi), -15, 15)
             Rover.steer = rock_ang
             Rover.brake = 0
+
+            # Decrease in speed
             if Rover.vel > 0.4:
                 Rover.throttle = -Rover.throttle_set
             else:
@@ -83,6 +84,7 @@ def decision_step(Rover):
                 Rover.throttle = Rover.throttle_set
             
             if Rover.rock_dist == None:
+                # If we lost the rock or we have picked it up.
                 Rover.mode = 'forward'
                 Rover.max_vel = 2.0
                 Rover.thorttle = Rover.throttle_set
@@ -90,31 +92,16 @@ def decision_step(Rover):
                 Rover.brake = 0.0
 
             elif Rover.rock_dist < 10:
+                # We are close enough to pick up the rock.
                 Rover.near_sample = True
                 Rover.velocity = 0.0
                 Rover.throttle = 0.0
                 Rover.brake = Rover.brake_set
 
-                #print('b')
-                #rock_ang = np.clip(np.mean(Rover.rock_ang * 180/np.pi), -15, 15)
-                #Rover.steer = rock_ang
-                #Rover.brake = 0
-                #Rover.throttle = Rover.throttle_set
-                #Rover.max_vel = 0.2
-                #if not Rover.rock_dist:
-                #    Rover.mode = 'forward'
-                #    Rover.max_vel = 2.0
-                #    Rover.throttle = Rover.throttle_set
-                #    Rover.near_sample = False
-                #    Rover.brake = 0.0
-
-                #elif Rover.rock_dist < 10:
-                #    Rover.near_sample = True
-                #    Rover.vel = 0.0
-                #    Rover.throttle = 0.0
-                #    Rover.brake = Rover.brake_set
 
         elif Rover.mode == 'stuck':
+            # The reason why I have this as a seperate mode but not inside of stop like it was before
+            # is just because I think it's cleaner.
             Rover.steer = -15
             if len(Rover.nav_angles) >= Rover.go_forward:
                 Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
@@ -133,10 +120,6 @@ def decision_step(Rover):
     if Rover.near_sample and Rover.vel == 0 and not Rover.picking_up:
         Rover.send_pickup = True
 
-
-
-
-    print(Rover.mode)
     
     return Rover
 

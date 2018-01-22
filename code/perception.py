@@ -119,36 +119,36 @@ def perception_step(Rover):
     # 2) Apply perspective transform
         # 2a) apply perspective transform on source image
     warped = perspect_transform(image, source, destination)
-        # 2b) apply perspective transform on camera view to create a mask to find obsticles.
+        # 2b) apply perspective transform on camera view to create a mask to find obstacles.
     camera_view_mask = perspect_transform(np.ones_like(image[:,:,0]), source, destination)
     
 
     # 3) Apply color threshold to identify navigable terrain/obstacles
     rgb_thresh = (160,160,160)
     threshed_navigable = color_thresh(warped,rgb_thresh=rgb_thresh)
-    threshed_obsticles = -camera_view_mask * (threshed_navigable - 1)
+    threshed_obstacles = -camera_view_mask * (threshed_navigable - 1)
 
 
     # 4) Update Rover.vision_image (this will be displayed on left side of screen)
     Rover.vision_image[:,:,2] = threshed_navigable * 255
-    Rover.vision_image[:,:,0] = threshed_obsticles * 255
+    Rover.vision_image[:,:,0] = threshed_obstacles * 255
 
         # Example: Rover.vision_image[:,:,0] = obstacle color-thresholded binary image
         #          Rover.vision_image[:,:,2] = navigable terrain color-thresholded binary image
 
     # 5) Convert map image pixel values to rover-centric coords
     x_pix_rover_navigable, y_pix_rover_navigable = rover_coords(threshed_navigable)
-    x_pix_rover_obsticles, y_pix_rover_obsticles = rover_coords(threshed_obsticles)
+    x_pix_rover_obstacles, y_pix_rover_obstacles = rover_coords(threshed_obstacles)
     
     # 6) Convert rover-centric pixel values to world coordinates
     world_pix_navigable_x, world_pix_navigable_y = pix_to_world(x_pix_rover_navigable, y_pix_rover_navigable, xpos, ypos, yaw, world_size, scale)
-    world_pix_obsticles_x, world_pix_obsticles_y = pix_to_world(x_pix_rover_obsticles, y_pix_rover_obsticles, xpos, ypos, yaw, world_size, scale)
+    world_pix_obstacles_x, world_pix_obstacles_y = pix_to_world(x_pix_rover_obstacles, y_pix_rover_obstacles, xpos, ypos, yaw, world_size, scale)
 
     # 7) Update Rover worldmap (to be displayed on right side of screen)
     
     if Rover.vel > 0.2 and Rover.brake == 0.0:
         # Giver higher weight to pixel classified as navigable terrain.
-        Rover.worldmap[world_pix_obsticles_y, world_pix_obsticles_x, 0] += 1
+        Rover.worldmap[world_pix_obstacles_y, world_pix_obstacles_x, 0] += 1
         Rover.worldmap[world_pix_navigable_y, world_pix_navigable_x, 2] += 10
         # Example: Rover.worldmap[obstacle_y_world, obstacle_x_world, 0] += 1
         #          Rover.worldmap[rock_y_world, rock_x_world, 1] += 1
@@ -162,6 +162,8 @@ def perception_step(Rover):
     # 9) Do the same for rock samples
     threshed_rock = find_rocks(warped) 
 
+    
+    # If a rock is on the image convert the pixels of the rock to world coordinates.
     if threshed_rock.any():
         x_pix_rover_rock, y_pix_rover_rock = rover_coords(threshed_rock)
         world_pix_rock_x, world_pix_rock_y = pix_to_world(x_pix_rover_rock, y_pix_rover_rock, xpos, ypos, yaw, world_size, scale)
